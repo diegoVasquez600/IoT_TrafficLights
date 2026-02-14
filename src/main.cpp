@@ -43,7 +43,7 @@ void setup() {
   pinMode(LED_PEDESTRIAN_RED, OUTPUT);
   pinMode(LED_PEDESTRIAN_GREEN, OUTPUT);
 
-  pinMode(BUTTON_PEDESTRIAN, INPUT); // si es botón simple a GND, usa INPUT_PULLUP
+  pinMode(BUTTON_PEDESTRIAN, INPUT_PULLUP); // si es botón simple a GND, usa INPUT_PULLUP
 
   cycleStartMillis = millis();
 
