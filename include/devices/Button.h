@@ -5,7 +5,8 @@ class Button
 {
 private:
     uint8_t _pin;
-    bool _lastState;
+    bool _lastReading;
+    bool _stableState;
     unsigned long _lastDebounceTime;
     const unsigned long _debounceDelay;
 
@@ -15,26 +16,31 @@ public:
     void begin()
     {
         pinMode(_pin, INPUT_PULLUP);
-        _lastState = digitalRead(_pin);
+        _lastReading = digitalRead(_pin);
+        _stableState = _lastReading;
         _lastDebounceTime = 0;
     }
 
     bool isPressed()
     {
         bool reading = digitalRead(_pin);
-        if (reading != _lastState)
+        if (reading != _lastReading)
         {
             _lastDebounceTime = millis();
         }
         if ((millis() - _lastDebounceTime) > _debounceDelay)
         {
-            if (reading == LOW && _lastState == HIGH)
+            if (reading != _stableState)
             {
-                _lastState = reading;
-                return true;
+                _stableState = reading;
+                if (_stableState == LOW)
+                {
+                    _lastReading = reading;
+                    return true;
+                }
             }
         }
-        _lastState = reading;
+        _lastReading = reading;
         return false;
     }
 };
