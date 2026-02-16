@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Traffic Dashboard</title>
+  <style>
+    :root {
+      --bg-1: #0f172a;
+      --bg-2: #0b3b3b;
+      --panel: rgba(255, 255, 255, 0.08);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --green: #10b981;
+      --ped-red: #ef4444;
+      --ped-green: #22c55e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Grotesk", "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 15% 10%, #1f2937 0%, transparent 55%),
+                  radial-gradient(900px 500px at 85% 15%, #0ea5a4 0%, transparent 55%),
+                  linear-gradient(140deg, var(--bg-1), var(--bg-2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 18px;
+    }
+
+    .wrap {
+      width: min(980px, 100%);
+      display: grid;
+      gap: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      padding: 20px 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(8px);
+    }
+
+    .title {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 4vw, 34px);
+      letter-spacing: 0.02em;
+    }
+
+    .status-pill {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .lights {
+      display: grid;
+      gap: 16px;
+      justify-items: center;
+    }
+
+    .light {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.35);
+      transition: transform 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
+    }
+
+    .light.on {
+      transform: translateY(-4px) scale(1.03);
+    }
+
+    .light.red.on { background: var(--red); box-shadow: 0 0 22px rgba(239, 68, 68, 0.6); }
+    .light.yellow.on { background: var(--yellow); box-shadow: 0 0 22px rgba(245, 158, 11, 0.6); }
+    .light.green.on { background: var(--green); box-shadow: 0 0 22px rgba(16, 185, 129, 0.6); }
+    .light.ped-red.on { background: var(--ped-red); box-shadow: 0 0 22px rgba(249, 115, 22, 0.6); }
+    .light.ped-green.on { background: var(--ped-green); box-shadow: 0 0 22px rgba(52, 211, 153, 0.6); }
+
+    .label {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .cta {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .cta button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      background: linear-gradient(120deg, #facc15, #f97316);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cta button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(249, 115, 22, 0.35);
+    }
+
+    .meta {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card title">
+      <div>
+        <h1>Smart Traffic Dashboard</h1>
+        <div class="meta" id="statusText">Connecting...</div>
+      </div>
+      <div class="status-pill" id="lastUpdate">Last update: --</div>
+    </div>
+
+    <div class="card">
+      <div class="lights">
+        <div id="carRed" class="light red"></div>
+        <div id="carYellow" class="light yellow"></div>
+        <div id="carGreen" class="light green"></div>
+        <div class="label">Vehicle signal</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lights">
+        <div id="pedRed" class="light ped-red"></div>
+        <div id="pedGreen" class="light ped-green"></div>
+        <div class="label">Pedestrian signal</div>
+      </div>
+    </div>
+
+    <div class="card cta">
+      <div class="meta">Manual control</div>
+      <button id="crossButton" type="button">Force pedestrian crossing</button>
+      <div class="meta" id="actionResult">Ready.</div>
+    </div>
+
+    <div class="footer">IoT Traffic Lights • ESP32</div>
+  </div>
+
+  <script>
+    const lights = {
+      carRed: document.getElementById("carRed"),
+      carYellow: document.getElementById("carYellow"),
+      carGreen: document.getElementById("carGreen"),
+      pedRed: document.getElementById("pedRed"),
+      pedGreen: document.getElementById("pedGreen"),
+    };
+
+    const statusText = document.getElementById("statusText");
+    const lastUpdate = document.getElementById("lastUpdate");
+    const actionResult = document.getElementById("actionResult");
+
+    const clearLights = () => {
+      Object.values(lights).forEach((light) => light.classList.remove("on"));
+    };
+
+    const applyState = (state) => {
+      clearLights();
+      if (state === "VEHICLE_GREEN") {
+        lights.carGreen.classList.add("on");
+        lights.pedRed.classList.add("on");
+      } else if (state === "VEHICLE_YELLOW") {
+        lights.carYellow.classList.add("on");
+        lights.pedRed.classList.add("on");
+      } else if (state === "VEHICLE_RED") {
+        lights.carRed.classList.add("on");
+        lights.pedGreen.classList.add("on");
+      } else if (state === "PEDESTRIAN_GREEN") {
+        lights.carRed.classList.add("on");
+        lights.pedGreen.classList.add("on");
+      } else if (state === "PEDESTRIAN_RED") {
+        lights.carRed.classList.add("on");
+        lights.pedRed.classList.add("on");
+      }
+    };
+
+    const fetchState = async () => {
+      try {
+        const response = await fetch("/api/state");
+        const data = await response.json();
+        const state = data.state || "UNKNOWN";
+        applyState(state);
+        statusText.textContent = `State: ${state}`;
+        lastUpdate.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+      } catch (err) {
+        statusText.textContent = "Disconnected";
+      }
+    };
+
+    document.getElementById("crossButton").addEventListener("click", async () => {
+      actionResult.textContent = "Sending request...";
+      try {
+        await fetch("/api/crossing", { method: "POST" });
+        actionResult.textContent = "Pedestrian crossing requested.";
+      } catch (err) {
+        actionResult.textContent = "Failed to send request.";
+      }
+    });
+
+    fetchState();
+    setInterval(fetchState, 700);
+  </script>
+</body>
+</html>

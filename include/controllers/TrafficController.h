@@ -64,21 +64,19 @@ public:
     void update()
     {
         unsigned long currentTime = millis();
+        if (_button.isPressed())
+        {
+            if (_reporter)
+            {
+                _reporter->reportButtonPressed();
+            }
+            startPedestrianCrossing();
+            return;
+        }
         switch (_trafficState)
         {
         case TrafficState::VEHICLE_GREEN:
-            if (_button.isPressed())
-            {
-                if (_reporter)
-                {
-                    _reporter->reportButtonPressed();
-                }
-                _trafficState = TrafficState::VEHICLE_YELLOW;
-                _stateStart = currentTime;
-                applyState(_trafficState);
-                reportStateIfNeeded(_trafficState);
-            }
-            else if (currentTime - _stateStart >= VEHICLE_GREEN_DURATION)
+            if (currentTime - _stateStart >= VEHICLE_GREEN_DURATION)
             {
                 _trafficState = TrafficState::VEHICLE_YELLOW;
                 _stateStart = currentTime;
@@ -119,6 +117,35 @@ public:
         default:
             break;
         }
+    }
+
+    TrafficState getCurrentState() const
+    {
+        return _trafficState;
+    }
+
+    void startPedestrianCrossing()
+    {
+        if (_trafficState == TrafficState::VEHICLE_GREEN)
+        {
+            _trafficState = TrafficState::VEHICLE_YELLOW;
+        }
+        else if (_trafficState == TrafficState::VEHICLE_YELLOW)
+        {
+            _trafficState = TrafficState::VEHICLE_RED;
+        }
+        else if (_trafficState == TrafficState::VEHICLE_RED)
+        {
+            _trafficState = TrafficState::VEHICLE_RED;
+        }
+        else
+        {
+            return;
+        }
+
+        _stateStart = millis();
+        applyState(_trafficState);
+        reportStateIfNeeded(_trafficState);
     }
 
 private:
