@@ -32,7 +32,7 @@ private:
     bool _buzzerPatternOn;
 
     const unsigned long VEHICLE_GREEN_DURATION = 15000;
-    const unsigned long VEHICLE_YELLOW_DURATION = 3000;
+    const unsigned long VEHICLE_YELLOW_DURATION = 2000;
     const unsigned long VEHICLE_RED_DURATION = 15000;
     const unsigned long PEDESTRIAN_CROSS_DURATION = 20000;
     const unsigned long BUZZER_ON_DURATION = 200;
